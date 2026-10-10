@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Interview Prep" />
+<meta name="theme-color" content="#0f172a" />
+<title>Interview Prep — Azure Data Engineer & Databricks Architect</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◆</span>
+    <div>
+      <h1>Interview Prep</h1>
+      <p class="sub">Azure Data Engineer &amp; Databricks Architect</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <input id="search" type="text" placeholder="Search questions or answers…" autocomplete="off" />
+      <button id="clearSearch" class="clear-btn" title="Clear" aria-label="Clear search">×</button>
+    </div>
+    <div class="role-filter" id="roleFilter">
+      <button class="role-btn active" data-role="all">All roles</button>
+      <button class="role-btn" data-role="ade">Data Engineer</button>
+      <button class="role-btn" data-role="architect">Architect</button>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+    <span id="progressText" class="progress-text">0 / 0 confident</span>
+    <button id="resetProgress" class="reset-btn" title="Reset all progress &amp; notes">Reset</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-head">
+      <span>Topics</span>
+      <span id="topicTotal" class="pill"></span>
+    </div>
+    <nav id="topicNav" class="topic-nav"></nav>
+    <div class="side-tools">
+      <button id="addOpen" class="tool-btn add-tool">➕ Add a question</button>
+      <button id="expandAll" class="tool-btn">Show all answers</button>
+      <button id="collapseAll" class="tool-btn">Hide all answers</button>
+      <button id="exportMine" class="tool-btn">⬇ Export my questions</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div id="crumb" class="crumb"></div>
+    <div id="questions" class="questions"></div>
+    <div id="empty" class="empty" hidden>No questions match your search.</div>
+  </main>
+</div>
+
+<footer class="footer">
+  <span id="resultCount"></span>
+  <span class="voice-hint">Tip: use the mic to dictate your spoken answer, 🔊 to hear the question read aloud. Notes &nbsp;progress are saved locally in your browser.</span>
+</footer>
+
+<!-- Add-a-question modal -->
+<div id="addModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Add a question">
+    <div class="modal-head">
+      <h2>➕ Add a question</h2>
+      <button id="addClose" class="modal-close" aria-label="Close">×</button>
+    </div>
+
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">Your question <em class="req">*</em></span>
+        <div class="q-input-row">
+          <textarea id="addQ" class="add-input" rows="2" placeholder="Type or dictate the interview question you want answered…"></textarea>
+          <button id="addMic" class="btn icon" title="Dictate question">🎤</button>
+        </div>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">Category (optional)</span>
+          <select id="addTopic" class="add-select"></select>
+        </label>
+        <label class="field">
+          <span class="field-label">Type</span>
+          <select id="addType" class="add-select">
+            <option value="concept">Concept</option>
+            <option value="scenario">Scenario</option>
+            <option value="coding">Coding</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Extra context (optional)</span>
+        <textarea id="addContext" class="add-input" rows="2" placeholder="e.g. focus on performance tuning; mention specific tools; keep it SHORT…"></textarea>
+      </label>
+
+      <details class="ai-settings">
+        <summary>AI settings — needed for live web search</summary>
+        <div class="ai-grid">
+          <label class="field">
+            <span class="field-label">Provider</span>
+            <select id="addProvider" class="add-select">
+              <option value="gemini">Google Gemini — web search</option>
+              <option value="openai">OpenAI Responses — web search</option>
+              <option value="openai-compat">OpenAI-compatible chat — no web</option>
+              <option value="opencode">OpenCode server — local, run "opencode serve"</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Model name — type any</span>
+            <input id="addModel" class="add-select" list="modelList" placeholder="e.g. gemini-2.5-flash, gpt-5.5, big-pickle" autocomplete="off" />
+            <datalist id="modelList"></datalist>
+          </label>
+          <label class="field" id="baseField">
+            <span class="field-label">Base URL</span>
+            <input id="addBase" class="add-select" placeholder="https://api.openai.com/v1" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span class="field-label">API key</span>
+            <input id="addKey" type="password" class="add-select" placeholder="Paste your API key" autocomplete="off" />
+          </label>
+        </div>
+        <p class="hint">
+          <strong>Gemini</strong> (key at
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a>)
+          and <strong>OpenAI</strong> (<code>gpt-5.5</code> etc.) do live web search.
+          <strong>OpenAI-compatible</strong> works with any base URL — e.g. opencode zen
+          (<code>https://opencode.ai/zen/v1</code>, models like <code>big-pickle</code>, <code>glm-5</code>, <code>kimi-k2</code>),
+          Groq, OpenRouter, or a local server. Everything is stored only in this browser.
+          <br /><strong>OpenCode server</strong> talks to a local headless <code>opencode serve</code> at
+          <code>http://localhost:4096</code> (start it with <code>opencode serve --cors null</code>; put the server
+          password in the API key box, or leave empty if none). Zen itself blocks browser calls, so run the included
+          <code>proxy.js</code>, open the app at <code>http://localhost:8787/</code>, and point
+          <strong>OpenAI-compatible</strong> at <code>http://localhost:8787/v1</code>.
+        </p>
+      </details>
+
+      <div class="modal-actions">
+        <button id="addSearch" class="btn primary">🔎 Search web &amp; draft answer</button>
+        <button id="addManual" class="btn">✎ Add manually</button>
+      </div>
+
+      <div id="addStatus" class="add-status" hidden></div>
+
+      <div id="addResult" class="add-result" hidden>
+        <div class="field-label">Draft answer — edit before saving if you like</div>
+        <textarea id="addAnswer" class="add-input answer-input" rows="10"></textarea>
+        <div id="addSources" class="sources"></div>
+        <div class="modal-actions">
+          <button id="addSave" class="btn primary">➕ Add to my list</button>
+          <button id="addRegen" class="btn">↻ Regenerate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data/adf.js"></script>
+<script src="data/spark.js"></script>
+<script src="data/delta.js"></script>
+<script src="data/pyspark.js"></script>
+<script src="data/sql.js"></script>
+<script src="data/modeling.js"></script>
+<script src="data/streaming.js"></script>
+<script src="data/governance.js"></script>
+<script src="data/architecture.js"></script>
+<script src="data/architect.js"></script>
+<script src="data/cicd-fabric.js"></script>
+<script src="data/scenario.js"></script>
+<script src="data/behavioral.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
